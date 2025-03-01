@@ -24,7 +24,7 @@ internal static class Mappings
         {
             Id = record.Id,
             ProfileId = record.ProfileId,
-            ImageData = ByteString.CopyFrom(record.Content)
+            Content = ByteString.CopyFrom(record.Content)
         };
     }
 }

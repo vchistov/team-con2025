@@ -9,7 +9,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ServiceDefaults", "src\Serv
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AppHost", "src\AppHost\AppHost.csproj", "{36A2BC21-8AB6-49AB-B982-5D8B8E8672E8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebApp", "src\WebApp\WebApp.csproj", "{B3A861AB-CC20-405F-B83F-0B2E20F9EE59}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RestService", "src\RestService\RestService.csproj", "{1B5ACE7C-A16C-43F1-9306-592F21FFB048}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -29,10 +29,10 @@ Global
 		{36A2BC21-8AB6-49AB-B982-5D8B8E8672E8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{36A2BC21-8AB6-49AB-B982-5D8B8E8672E8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{36A2BC21-8AB6-49AB-B982-5D8B8E8672E8}.Release|Any CPU.Build.0 = Release|Any CPU
-		{B3A861AB-CC20-405F-B83F-0B2E20F9EE59}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{B3A861AB-CC20-405F-B83F-0B2E20F9EE59}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{B3A861AB-CC20-405F-B83F-0B2E20F9EE59}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{B3A861AB-CC20-405F-B83F-0B2E20F9EE59}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1B5ACE7C-A16C-43F1-9306-592F21FFB048}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1B5ACE7C-A16C-43F1-9306-592F21FFB048}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1B5ACE7C-A16C-43F1-9306-592F21FFB048}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1B5ACE7C-A16C-43F1-9306-592F21FFB048}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

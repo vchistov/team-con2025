@@ -1,7 +1,9 @@
 var builder = DistributedApplication.CreateBuilder(args);
 
-var customerProject = builder.AddProject<Projects.GrpcService>("customer").WithExternalHttpEndpoints();
+var grpcProject = builder.AddProject<Projects.GrpcService>("grpc-svc").WithExternalHttpEndpoints();
 
-var webAppProject = builder.AddProject<Projects.WebApp>("webapp").WithExternalHttpEndpoints().WithReference(customerProject);
+// var webAppProject = builder.AddProject<Projects.WebApp>("webapp").WithExternalHttpEndpoints().WithReference(grpcProject);
+
+var restProject = builder.AddProject<Projects.RestService>("rest-svc").WithExternalHttpEndpoints().WithReference(grpcProject);
 
 builder.Build().Run();

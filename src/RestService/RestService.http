@@ -1,0 +1,38 @@
+@RestService_HostAddress = http://localhost:5262
+
+### Get all profiles
+GET {{RestService_HostAddress}}/api/v1/profiles
+Accept: application/json
+
+### Create profile
+POST {{RestService_HostAddress}}/api/v1/profiles
+Content-Type: application/json
+Accept-Language: de,ru;q=0.9,en;q=0.8
+
+{
+    "name": "Harry Potter",
+    "phone": "800-555-35-36",
+    "birthDate": "1981-07-31"
+}
+
+### Get profile by Id
+GET {{RestService_HostAddress}}/api/v1/profiles/500
+Accept: application/json
+
+### Get profile's avatar by Id
+GET {{RestService_HostAddress}}/api/v1/profiles/7/avatars/_first
+
+### Get profile's avatar by Id
+GET {{RestService_HostAddress}}/api/v1/profiles/7/avatars/11
+
+### Add avatar to profile
+POST {{RestService_HostAddress}}/api/v1/profiles/6/avatars
+
+### Add random avatar to profile
+POST {{RestService_HostAddress}}/api/v1/profiles/1/avatars/_random
+
+### Delete avatar from profile
+DELETE {{RestService_HostAddress}}/api/v1/profiles/1/avatars/1
+
+### Delete avatar from profile
+GET {{RestService_HostAddress}}/api/v1/profiles/7/avatars/_upload

@@ -4,12 +4,21 @@ using Customer.Avatar.V1;
 using Grpc.Core;
 using GrpcService.DataAccess;
 using GrpcService.DataAccess.Records;
+using GrpcService.Utilities;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 
+[Authorize]
 internal class AvatarGrpcService(DataContext dataContext) : AvatarService.AvatarServiceBase
 {
     public override async Task<AddAvatarResponse> AddAvatar(AddAvatarRequest request, ServerCallContext context)
     {
+        if (request.ProfileId == 6)
+        {
+            // That's for training purposes, the long-running operation
+            await Task.Delay(TimeSpan.FromSeconds(30), context.CancellationToken);
+        }
+
         var profile = await dataContext.Profiles.FirstOrDefaultAsync(p => p.Id == request.ProfileId, context.CancellationToken);
         if (profile is null)
         {
@@ -20,13 +29,34 @@ internal class AvatarGrpcService(DataContext dataContext) : AvatarService.Avatar
         { 
             Profile = profile,
             ProfileId = profile.Id,
-            Content = request.ImageData.ToByteArray()
+            Content = request.Content.ToByteArray()
         };
 
         dataContext.Avatars.Add(avatarRecord);
         await dataContext.SaveChangesAsync(context.CancellationToken);
 
         return new AddAvatarResponse { Id = avatarRecord.Id };
+    }
+
+    public override async Task<AddRandomAvatarResponse> AddRandomAvatar(AddRandomAvatarRequest request, ServerCallContext context)
+    {
+        var profile = await dataContext.Profiles.FirstOrDefaultAsync(p => p.Id == request.ProfileId, context.CancellationToken);
+        if (profile is null)
+        {
+            throw new RpcException(new Status(StatusCode.NotFound, "Profile not found."));
+        }
+
+        var avatarRecord = new AvatarRecord
+        {
+            Profile = profile,
+            ProfileId = profile.Id,
+            Content = ImageGenerator.GenerateRandomJpeg(128, 128)
+        };
+
+        dataContext.Avatars.Add(avatarRecord);
+        await dataContext.SaveChangesAsync(context.CancellationToken);
+
+        return new AddRandomAvatarResponse { Id = avatarRecord.Id };
     }
 
     public override async Task<DeleteAvatarResponse> DeleteAvatar(DeleteAvatarRequest request, ServerCallContext context)
@@ -44,6 +74,12 @@ internal class AvatarGrpcService(DataContext dataContext) : AvatarService.Avatar
 
     public override async Task<Avatar> GetAvatar(GetAvatarRequest request, ServerCallContext context)
     {
+        if (request.Id == 6)
+        {
+            // That's for training purposes, when request id is 6, the request always fails with Unavailable code.
+            throw new RpcException(new Status(StatusCode.Unavailable, "Permanently out of service."));
+        }
+
         var avatar = await dataContext.Avatars.AsNoTracking().FirstOrDefaultAsync(a => a.Id == request.Id && a.ProfileId == request.ProfileId, context.CancellationToken);
         if (avatar is null)
         {
@@ -51,5 +87,13 @@ internal class AvatarGrpcService(DataContext dataContext) : AvatarService.Avatar
         }
 
         return avatar.ToAvatar();
+    }
+
+    public override async Task ListAvatars(ListAvatarsRequest request, IServerStreamWriter<Avatar> responseStream, ServerCallContext context)
+    {
+        await foreach (var avatar in dataContext.Avatars.Where(a => a.ProfileId == request.ProfileId).AsNoTracking().AsAsyncEnumerable())
+        {
+            await responseStream.WriteAsync(avatar.ToAvatar(), context.CancellationToken);
+        }
     }
 }

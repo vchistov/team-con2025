@@ -1,6 +1,6 @@
 # Usage: .\build.ps1 -version "1.0"
 param (
-    [string]$version = "1.0"
+    [string]$version = "1.1"
 )
 
 $ErrorActionPreference = "Stop"

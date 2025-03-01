@@ -2,9 +2,10 @@
 
 using Bogus;
 using GrpcService.DataAccess.Records;
+using GrpcService.Utilities;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
-using SkiaSharp;
+using System.Security.Cryptography;
 
 internal static class WebApplicationExtensions
 {
@@ -29,13 +30,15 @@ internal static class WebApplicationExtensions
 
     private static void SeedDatabase(DbContext context)
     {
+        var bytes = RandomNumberGenerator.GetBytes(32);
+
         var faker = new Faker<ProfileRecord>()
             .RuleFor(p => p.FullName, f => f.Name.FullName())
-            .RuleFor(p => p.BirthDate, f => DateOnly.FromDateTime(f.Date.Past(30, DateTime.Now.AddYears(-18))))
-            .RuleFor(p => p.Phone, f => f.Phone.PhoneNumber())
+            .RuleFor(p => p.BirthDate, f => Random.Shared.Next(100) > 50 ? DateOnly.FromDateTime(f.Date.Past(30, DateTime.Now.AddYears(-18))) : null)
+            .RuleFor(p => p.Phone, f => f.Phone.PhoneNumber("###-###-####"))
             .RuleFor(p => p.Avatars, _ => []);
 
-        var profiles = faker.Generate(500);
+        var profiles = faker.Generate(50);
         context.Set<ProfileRecord>().AddRange(profiles);
         context.SaveChanges();
 
@@ -45,24 +48,11 @@ internal static class WebApplicationExtensions
             {
                 ProfileId = profile.Id,
                 Profile = profile,
-                Content = GenerateRandomJpeg(32, 32),
+                Content = ImageGenerator.GenerateRandomJpeg(64, 64),
             };
             context.Set<AvatarRecord>().Add(avatar);
         }
-        context.SaveChanges();
-    }
 
-    private static byte[] GenerateRandomJpeg(int width, int height)
-    {
-        using var bitmap = new SKBitmap(width, height);
-        using var canvas = new SKCanvas(bitmap);
-        var paint = new SKPaint
-        {
-            Color = new SKColor((byte)Random.Shared.Next(256), (byte)Random.Shared.Next(256), (byte)Random.Shared.Next(256))
-        };
-        canvas.DrawRect(0, 0, width, height, paint);
-        using var image = SKImage.FromBitmap(bitmap);
-        using var data = image.Encode(SKEncodedImageFormat.Jpeg, 100);
-        return data.ToArray();
+        context.SaveChanges();
     }
 }

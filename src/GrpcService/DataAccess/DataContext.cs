@@ -18,6 +18,10 @@ public class DataContext : DbContext
     {
         modelBuilder
             .Entity<ProfileRecord>()
+            .HasIndex(p => p.Phone).IsUnique();
+
+        modelBuilder
+            .Entity<ProfileRecord>()
             .HasMany(p => p.Avatars)
             .WithOne(a => a.Profile)
             .HasForeignKey(a => a.ProfileId)

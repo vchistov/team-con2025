@@ -17,7 +17,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\GrpcService\GrpcService.csproj" />
-    <ProjectReference Include="..\WebApp\WebApp.csproj" />
+    <ProjectReference Include="..\RestService\RestService.csproj" />
   </ItemGroup>
 
 </Project>

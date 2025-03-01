@@ -48,20 +48,44 @@ public static class Extensions
             logging.IncludeScopes = true;
         });
 
+        var grpcHost = !string.IsNullOrWhiteSpace(builder.Configuration["GRPC_HOST"]);
+        var grpcClient = !string.IsNullOrWhiteSpace(builder.Configuration["GRPC_CLIENT"]);
+
         builder.Services.AddOpenTelemetry()
             .WithMetrics(metrics =>
             {
-                metrics.AddAspNetCoreInstrumentation()
+                metrics.AddEventCountersInstrumentation(opt =>
+                {
+                    opt.RefreshIntervalSecs = 1;
+
+                    if (grpcHost)
+                    {
+                        opt.AddEventSources("Grpc.AspNetCore.Server");
+                    }
+
+                    if (grpcClient)
+                    {
+                        opt.AddEventSources("Grpc.Net.Client");
+                    }
+                });
+
+                metrics
+                    .AddAspNetCoreInstrumentation()
                     .AddHttpClientInstrumentation()
                     .AddRuntimeInstrumentation();
             })
             .WithTracing(tracing =>
             {
-                tracing.AddSource(builder.Environment.ApplicationName)
+                tracing
+                    .AddSource(builder.Environment.ApplicationName)
                     .AddAspNetCoreInstrumentation()
-                    // Uncomment the following line to enable gRPC instrumentation (requires the OpenTelemetry.Instrumentation.GrpcNetClient package)
-                    //.AddGrpcClientInstrumentation()
                     .AddHttpClientInstrumentation();
+
+                if (grpcClient)
+                {
+                    // Uncomment the following line to enable gRPC instrumentation (requires the OpenTelemetry.Instrumentation.GrpcNetClient package)
+                    tracing.AddGrpcClientInstrumentation();
+                }
             });
 
         builder.AddOpenTelemetryExporters();
