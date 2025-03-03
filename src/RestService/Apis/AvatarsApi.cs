@@ -28,7 +28,27 @@ public static class AvatarsApi
     {
         try
         {
-            var response = await services.ServiceClient.GetAvatarAsync(new GetAvatarRequest { ProfileId = profileId, Id = id }, cancellationToken: cancellationToken);
+            /*
+             For training purposes on gRPC service side it emulates long-running request for profiles #4 and #5.
+             Also it emulates 'Unavailable' error for profile #6.
+             */
+
+            DateTime? deadline = null;
+            if (profileId == 4)
+            {
+                // 5 seconds timeout for request avatar of profile #4.
+                deadline = DateTime.UtcNow.AddSeconds(5);
+            }
+
+            var cts = new CancellationTokenSource();
+            if (profileId == 5)
+            {
+                // request cancellation after 5 seconds for avatar of profile #5.
+                cts.CancelAfter(TimeSpan.FromSeconds(5));
+                cancellationToken.Register(cts.Cancel);
+            }
+
+            var response = await services.ServiceClient.GetAvatarAsync(new GetAvatarRequest { ProfileId = profileId, Id = id }, deadline: deadline, cancellationToken: cts.Token);
             return TypedResults.File(response.Content.ToByteArray(), contentType: MediaTypeNames.Image.Jpeg);
         }
         catch (RpcException ex) when (ex.StatusCode == StatusCode.NotFound)
@@ -69,18 +89,10 @@ public static class AvatarsApi
         return TypedResults.Content(html, MediaTypeNames.Text.Html);
     }
 
-    private static async Task<Results<Ok<long>, ProblemHttpResult>> AddAvatarAsync(long profileId, IFormFile imageData, [FromServices] AvatarServices services, CancellationToken cancellationToken)
+    private static async Task<Ok<long>> AddAvatarAsync(long profileId, IFormFile imageData, [FromServices] AvatarServices services, CancellationToken cancellationToken)
     {
-        try
-        {
-            var response = await services.ServiceClient.AddAvatarAsync(new AddAvatarRequest { ProfileId = profileId, Content = ByteString.FromStream(imageData.OpenReadStream()) }, deadline: DateTime.UtcNow.AddSeconds(10), cancellationToken: cancellationToken);
-            return TypedResults.Ok(response.Id);
-        }
-        catch (RpcException ex)
-        {
-            services.Logger.LogError(ex, "Failed to add avatar to profile {ProfileId}.", profileId);
-            return TypedResults.Problem(ex.Status.ToString(), statusCode: StatusCodes.Status422UnprocessableEntity);
-        }
+        var response = await services.ServiceClient.AddAvatarAsync(new AddAvatarRequest { ProfileId = profileId, Content = ByteString.FromStream(imageData.OpenReadStream()) }, cancellationToken: cancellationToken);
+        return TypedResults.Ok(response.Id);
     }
 
     private static async Task<Ok<long>> AddRandomAvatarAsync(long profileId, [FromServices] AvatarServices services, CancellationToken cancellationToken)

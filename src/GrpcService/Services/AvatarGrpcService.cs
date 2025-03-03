@@ -9,16 +9,10 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 
 [Authorize]
-internal class AvatarGrpcService(DataContext dataContext) : AvatarService.AvatarServiceBase
+internal class AvatarGrpcService(DataContext dataContext, ILogger<AvatarGrpcService> logger) : AvatarService.AvatarServiceBase
 {
     public override async Task<AddAvatarResponse> AddAvatar(AddAvatarRequest request, ServerCallContext context)
     {
-        if (request.ProfileId == 6)
-        {
-            // That's for training purposes, the long-running operation
-            await Task.Delay(TimeSpan.FromSeconds(30), context.CancellationToken);
-        }
-
         var profile = await dataContext.Profiles.FirstOrDefaultAsync(p => p.Id == request.ProfileId, context.CancellationToken);
         if (profile is null)
         {
@@ -74,7 +68,13 @@ internal class AvatarGrpcService(DataContext dataContext) : AvatarService.Avatar
 
     public override async Task<Avatar> GetAvatar(GetAvatarRequest request, ServerCallContext context)
     {
-        if (request.Id == 6)
+        if (request.ProfileId == 4 || request.ProfileId == 5)
+        {
+            // That's for training purposes, the long-running operation
+            await Task.Delay(TimeSpan.FromSeconds(30), context.CancellationToken);
+        }
+
+        if (request.ProfileId == 6)
         {
             // That's for training purposes, when request id is 6, the request always fails with Unavailable code.
             throw new RpcException(new Status(StatusCode.Unavailable, "Permanently out of service."));
@@ -93,6 +93,7 @@ internal class AvatarGrpcService(DataContext dataContext) : AvatarService.Avatar
     {
         await foreach (var avatar in dataContext.Avatars.Where(a => a.ProfileId == request.ProfileId).AsNoTracking().AsAsyncEnumerable())
         {
+            logger.LogInformation("Send to stream avatar #{AvatarId} of profile #{ProfileId}.", avatar.Id, avatar.ProfileId);
             await responseStream.WriteAsync(avatar.ToAvatar(), context.CancellationToken);
         }
     }

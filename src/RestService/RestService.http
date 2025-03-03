@@ -1,38 +1,108 @@
 @RestService_HostAddress = http://localhost:5262
 
+### =============================================================================
+### Stream all profiles
+### =============================================================================
+
 ### Get all profiles
 GET {{RestService_HostAddress}}/api/v1/profiles
 Accept: application/json
 
-### Create profile
+### =============================================================================
+### Error handling - phone conflict
+### =============================================================================
+
+### Create profile with absolutely unique phone number
 POST {{RestService_HostAddress}}/api/v1/profiles
 Content-Type: application/json
-Accept-Language: de,ru;q=0.9,en;q=0.8
-
 {
     "name": "Harry Potter",
-    "phone": "800-555-35-36",
+    "phone": "800-555-35-35",
     "birthDate": "1981-07-31"
 }
 
-### Get profile by Id
-GET {{RestService_HostAddress}}/api/v1/profiles/500
+### Use returned profile Id to get profile info
+GET {{RestService_HostAddress}}/api/v1/profiles/51
 Accept: application/json
 
-### Get profile's avatar by Id
-GET {{RestService_HostAddress}}/api/v1/profiles/7/avatars/_first
+### Attempt to create another profile with same phone
+POST {{RestService_HostAddress}}/api/v1/profiles
+Content-Type: application/json
+{
+    "name": "Draco Malfoy",
+    "phone": "800-555-35-35"
+}
 
-### Get profile's avatar by Id
-GET {{RestService_HostAddress}}/api/v1/profiles/7/avatars/11
+### =============================================================================
+### Error handling - localization
+### =============================================================================
 
-### Add avatar to profile
-POST {{RestService_HostAddress}}/api/v1/profiles/6/avatars
+### Create profile with absolutely unique phone number
+POST {{RestService_HostAddress}}/api/v1/profiles
+Content-Type: application/json
+{
+    "name": "Albus Dumbledore",
+    "phone": "800-555-42-42"
+}
+
+### Attempt to create another profile with same phone
+POST {{RestService_HostAddress}}/api/v1/profiles
+Content-Type: application/json
+Accept-Language: ru;q=0.9,en;q=0.8,de;q=0.7,fr;q=0.6
+{
+    "name": "Albus Dumbledore (official)",
+    "phone": "800-555-42-42"
+}
+
+### =============================================================================
+### Resilience - retries/throttling
+### =============================================================================
+
+### Activate throttling by calling method which is permanently fails
+GET {{RestService_HostAddress}}/api/v1/profiles/6
+
+### Invoke the method again, make sure no retries
+GET {{RestService_HostAddress}}/api/v1/profiles/6
+
+### Invoke another service, make sure it has separate fails counter, so it retries fails
+GET {{RestService_HostAddress}}/api/v1/profiles/6/avatars/1
+
+### Invoke non-failed method (6 times)
+GET {{RestService_HostAddress}}/api/v1/profiles/1
+
+### Invoke failed method, make sure it retries 2 times
+GET {{RestService_HostAddress}}/api/v1/profiles/6
+
+### =============================================================================
+### Server streaming
+### =============================================================================
+
+### Get profile's first avatar
+GET {{RestService_HostAddress}}/api/v1/profiles/1/avatars/_first
+
+### Get the same avatar by Id (see X-Profile-AvatarId in previous request)
+GET {{RestService_HostAddress}}/api/v1/profiles/1/avatars/1
+
+### Make sure no more avatars presented
+GET {{RestService_HostAddress}}/api/v1/profiles/1/avatars/2
 
 ### Add random avatar to profile
 POST {{RestService_HostAddress}}/api/v1/profiles/1/avatars/_random
 
-### Delete avatar from profile
-DELETE {{RestService_HostAddress}}/api/v1/profiles/1/avatars/1
+### Get avatar by returned Id
+GET {{RestService_HostAddress}}/api/v1/profiles/1/avatars/11
 
-### Delete avatar from profile
-GET {{RestService_HostAddress}}/api/v1/profiles/7/avatars/_upload
+### Get profile's first avatar, check the logs - server sends both avatars
+GET {{RestService_HostAddress}}/api/v1/profiles/1/avatars/_first
+
+### =============================================================================
+### Cancellation and Timeout 
+### =============================================================================
+
+### Get timeout (deadline) exceeded on request profile's avatar
+GET {{RestService_HostAddress}}/api/v1/profiles/4/avatars/1
+
+### Get cancellation error when cancell request profile's avatar
+GET {{RestService_HostAddress}}/api/v1/profiles/5/avatars/1
+
+### =============================================================================

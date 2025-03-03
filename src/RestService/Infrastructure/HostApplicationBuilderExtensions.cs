@@ -52,7 +52,7 @@ public static class HostApplicationBuilderExtensions
         return new RetryPolicy
         {
             MaxAttempts = 3,
-            InitialBackoff = TimeSpan.FromMilliseconds(500),
+            InitialBackoff = TimeSpan.FromMilliseconds(50),
             MaxBackoff = TimeSpan.FromSeconds(3),
             BackoffMultiplier = 0.5,
             RetryableStatusCodes = { StatusCode.Unavailable }
