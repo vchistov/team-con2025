@@ -58,20 +58,26 @@ Accept-Language: ru;q=0.9,en;q=0.8,de;q=0.7,fr;q=0.6
 ### Resilience - retries/throttling
 ### =============================================================================
 
-### Activate throttling by calling method which is permanently fails
+### Activate throttling by calling method which is permanently fails (tokens before=6, after=3)
 GET {{RestService_HostAddress}}/api/v1/profiles/6
 
-### Invoke the method again, make sure no retries
+### Invoke the method again, make sure no retries (tokens before=3, after=2)
 GET {{RestService_HostAddress}}/api/v1/profiles/6
 
 ### Invoke another service, make sure it has separate fails counter, so it retries fails
 GET {{RestService_HostAddress}}/api/v1/profiles/6/avatars/1
 
-### Invoke non-failed method (6 times)
+### Invoke non-failed method (6 times) (tokens before=2, after=5)
 GET {{RestService_HostAddress}}/api/v1/profiles/1
 
-### Invoke failed method, make sure it retries 2 times
+### Invoke failed method, make sure it retries 2 times (tokens before=5, after=3)
 GET {{RestService_HostAddress}}/api/v1/profiles/6
+
+### Invoke non-failed method (6 times) (tokens before=3, after=6)
+GET {{RestService_HostAddress}}/api/v1/profiles/1
+
+### Invoke retriable method, make sure 2 retries was made
+GET {{RestService_HostAddress}}/api/v1/profiles/5
 
 ### =============================================================================
 ### Server streaming
